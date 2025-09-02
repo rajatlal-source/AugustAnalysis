@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Performance Excel Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .excel-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .excel-sheet {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .section-header {
+            background: #3498db !important;
+            color: white !important;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .input-cell {
+            background: #e8f4fd;
+            border: 2px solid #3498db;
+        }
+        
+        .input-cell input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 5px;
+        }
+        
+        .formula-cell {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .positive {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .negative {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+        
+        .export-section {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+        
+        .export-btn {
+            background: #27ae60;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .export-btn:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+        
+        .row-label {
+            background: #ecf0f1 !important;
+            font-weight: bold;
+            text-align: left !important;
+            padding-left: 15px !important;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="excel-container">
+        <div class="header">
+            <h1>📊 Sales Performance Analysis Dashboard</h1>
+            <p>Interactive Excel-Style Spreadsheet | Change any blue cell to update calculations</p>
+        </div>
+        
+        <div class="excel-sheet">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th style="width: 250px;">Metric</th>
+                        <th style="width: 100px;">July</th>
+                        <th style="width: 100px;">August</th>
+                        <th style="width: 120px;">Change (#)</th>
+                        <th style="width: 100px;">Change (%)</th>
+                        <th style="width: 200px;">Analysis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- INPUT SECTION -->
+                    <tr><td colspan="6" class="section-header">📥 INPUT DATA (Edit Blue Cells)</td></tr>
+                    
+                    <tr>
+                        <td class="row-label">All Eligible Leads</td>
+                        <td class="input-cell"><input type="number" id="july_all_eligible" value="4917" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_all_eligible" value="6375" onchange="calculate()"></td>
+                        <td class="formula-cell" id="all_eligible_change">+1,458</td>
+                        <td class="formula-cell" id="all_eligible_change_pct">+29.7%</td>
+                        <td class="formula-cell">Lead qualification challenge</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">HDFC Leads (IP + vKYC)</td>
+                        <td class="input-cell"><input type="number" id="july_hdfc_leads" value="1759" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_hdfc_leads" value="821" onchange="calculate()"></td>
+                        <td class="formula-cell" id="hdfc_leads_change">-938</td>
+                        <td class="formula-cell" id="hdfc_leads_change_pct">-53.3%</td>
+                        <td class="formula-cell">Major lead generation issue</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">RBL Leads (Post + Pre)</td>
+                        <td class="input-cell"><input type="number" id="july_rbl_leads" value="1986" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_rbl_leads" value="1493" onchange="calculate()"></td>
+                        <td class="formula-cell" id="rbl_leads_change">-493</td>
+                        <td class="formula-cell" id="rbl_leads_change_pct">-24.8%</td>
+                        <td class="formula-cell">Moderate decline</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">RBL Failed → HDFC</td>
+                        <td class="input-cell"><input type="number" id="july_rbl_failed" value="1484" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_rbl_failed" value="1558" onchange="calculate()"></td>
+                        <td class="formula-cell" id="rbl_failed_change">+74</td>
+                        <td class="formula-cell" id="rbl_failed_change_pct">+5.0%</td>
+                        <td class="formula-cell">Cross-sell opportunity</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">RBL Archived</td>
+                        <td class="input-cell"><input type="number" id="july_rbl_archived" value="0" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_rbl_archived" value="461" onchange="calculate()"></td>
+                        <td class="formula-cell" id="rbl_archived_change">+461</td>
+                        <td class="formula-cell" id="rbl_archived_change_pct">New</td>
+                        <td class="formula-cell">Better lifecycle management</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">HDFC Conversions</td>
+                        <td class="input-cell"><input type="number" id="july_hdfc_conv" value="165" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_hdfc_conv" value="83" onchange="calculate()"></td>
+                        <td class="formula-cell" id="hdfc_conv_change">-82</td>
+                        <td class="formula-cell" id="hdfc_conv_change_pct">-49.7%</td>
+                        <td class="formula-cell">Due to lead volume drop</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">RBL Conversions</td>
+                        <td class="input-cell"><input type="number" id="july_rbl_conv" value="191" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_rbl_conv" value="321" onchange="calculate()"></td>
+                        <td class="formula-cell" id="rbl_conv_change">+130</td>
+                        <td class="formula-cell" id="rbl_conv_change_pct">+68.1%</td>
+                        <td class="formula-cell">Exceptional performance</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">Total Fresh Conversions</td>
+                        <td class="input-cell"><input type="number" id="july_total_fresh" value="356" onchange="calculate()"></td>
+                        <td class="input-cell"><input type="number" id="aug_total_fresh" value="404" onchange="calculate()"></td>
+                        <td class="formula-cell" id="total_fresh_change">+48</td>
+                        <td class="formula-cell" id="total_fresh_change_pct">+13.5%</td>
+                        <td class="formula-cell">Good growth</td>
+                    </tr>
+                    
+                    <!-- CALCULATED SECTION -->
+                    <tr><td colspan="6" class="section-header">🧮 CALCULATED METRICS</td></tr>
+                    
+                    <tr>
+                        <td class="row-label">Total Fresh Leads</td>
+                        <td class="formula-cell" id="july_total_leads">10,146</td>
+                        <td class="formula-cell" id="aug_total_leads">10,708</td>
+                        <td class="formula-cell" id="total_leads_change">+562</td>
+                        <td class="formula-cell" id="total_leads_change_pct">+5.5%</td>
+                        <td class="formula-cell">Modest growth</td>
+                    </tr>
+                    
+                    <tr class="highlight">
+                        <td class="row-label">HDFC Conversion Rate</td>
+                        <td class="formula-cell" id="july_hdfc_rate">9.4%</td>
+                        <td class="formula-cell" id="aug_hdfc_rate">10.1%</td>
+                        <td class="formula-cell" id="hdfc_rate_change">+0.7pp</td>
+                        <td class="formula-cell" id="hdfc_rate_change_pct">+7.4%</td>
+                        <td class="formula-cell positive">IMPROVED EFFICIENCY</td>
+                    </tr>
+                    
+                    <tr class="highlight">
+                        <td class="row-label">RBL Conversion Rate</td>
+                        <td class="formula-cell" id="july_rbl_rate">9.6%</td>
+                        <td class="formula-cell" id="aug_rbl_rate">21.5%</td>
+                        <td class="formula-cell" id="rbl_rate_change">+11.9pp</td>
+                        <td class="formula-cell" id="rbl_rate_change_pct">+124%</td>
+                        <td class="formula-cell positive">EXCEPTIONAL IMPROVEMENT</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">Overall Fresh Conversion Rate</td>
+                        <td class="formula-cell" id="july_overall_rate">3.5%</td>
+                        <td class="formula-cell" id="aug_overall_rate">3.8%</td>
+                        <td class="formula-cell" id="overall_rate_change">+0.3pp</td>
+                        <td class="formula-cell" id="overall_rate_change_pct">+8.6%</td>
+                        <td class="formula-cell positive">Solid improvement</td>
+                    </tr>
+                    
+                    <!-- IMPACT ANALYSIS -->
+                    <tr><td colspan="6" class="section-header">💰 REVENUE IMPACT ANALYSIS</td></tr>
+                    
+                    <tr>
+                        <td class="row-label">Lost HDFC Revenue (due to lead drop)</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell" id="lost_hdfc_revenue">-95 KYCs</td>
+                        <td class="formula-cell">Lead volume impact</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell negative">Upstream issue</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">RBL Efficiency Gain</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell" id="rbl_efficiency_gain">+178 KYCs</td>
+                        <td class="formula-cell">Rate improvement impact</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell positive">Sales excellence</td>
+                    </tr>
+                    
+                    <tr class="highlight">
+                        <td class="row-label">Net KYC Impact</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell" id="net_impact">+148 KYCs</td>
+                        <td class="formula-cell">Overall result</td>
+                        <td class="formula-cell" id="net_impact_pct">+36.6%</td>
+                        <td class="formula-cell positive">Strong growth</td>
+                    </tr>
+                    
+                    <!-- POTENTIAL ANALYSIS -->
+                    <tr><td colspan="6" class="section-header">🎯 POTENTIAL ANALYSIS (What If Scenarios)</td></tr>
+                    
+                    <tr>
+                        <td class="row-label">If July HDFC volume + August rate</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell" id="hdfc_potential">178 KYCs</td>
+                        <td class="formula-cell" id="hdfc_potential_vs_actual">+95 vs actual</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell">Lead gen recovery target</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">If July RBL volume + August rate</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell" id="rbl_potential">427 KYCs</td>
+                        <td class="formula-cell" id="rbl_potential_vs_actual">+106 vs actual</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell">Maximum RBL potential</td>
+                    </tr>
+                    
+                    <tr class="highlight">
+                        <td class="row-label">September Potential (July volume + Aug rates)</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell" id="september_potential">605 KYCs</td>
+                        <td class="formula-cell" id="september_vs_august">+201 vs August</td>
+                        <td class="formula-cell" id="september_growth_pct">+49.8%</td>
+                        <td class="formula-cell positive">TARGET OPPORTUNITY</td>
+                    </tr>
+                    
+                    <!-- LEAD MIX ANALYSIS -->
+                    <tr><td colspan="6" class="section-header">📊 LEAD MIX ANALYSIS</td></tr>
+                    
+                    <tr>
+                        <td class="row-label">HDFC % of Total Leads</td>
+                        <td class="formula-cell" id="july_hdfc_mix">17.3%</td>
+                        <td class="formula-cell" id="aug_hdfc_mix">7.7%</td>
+                        <td class="formula-cell" id="hdfc_mix_change">-9.6pp</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell negative">Significant drop</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">RBL % of Total Leads</td>
+                        <td class="formula-cell" id="july_rbl_mix">19.6%</td>
+                        <td class="formula-cell" id="aug_rbl_mix">13.9%</td>
+                        <td class="formula-cell" id="rbl_mix_change">-5.7pp</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell negative">Moderate drop</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">All Eligible % of Total</td>
+                        <td class="formula-cell" id="july_all_eligible_mix">48.4%</td>
+                        <td class="formula-cell" id="aug_all_eligible_mix">59.5%</td>
+                        <td class="formula-cell" id="all_eligible_mix_change">+11.1pp</td>
+                        <td class="formula-cell">-</td>
+                        <td class="formula-cell negative">Need better qualification</td>
+                    </tr>
+                    
+                    <!-- KEY INSIGHTS -->
+                    <tr><td colspan="6" class="section-header">💡 KEY INSIGHTS</td></tr>
+                    
+                    <tr>
+                        <td class="row-label">Team Performance Verdict</td>
+                        <td colspan="2" class="formula-cell positive" id="team_verdict">EXCELLENT - Both HDFC & RBL rates improved</td>
+                        <td colspan="3" class="formula-cell">Sales execution is not the problem</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">Primary Issue</td>
+                        <td colspan="2" class="formula-cell negative" id="primary_issue">LEAD GENERATION - 53% drop in HDFC leads</td>
+                        <td colspan="3" class="formula-cell">Upstream problem, not sales team</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">Biggest Opportunity</td>
+                        <td colspan="2" class="formula-cell positive" id="biggest_opportunity">Restore HDFC lead volume to July levels</td>
+                        <td colspan="3" class="formula-cell">Could add +95 KYCs immediately</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="row-label">Success Story</td>
+                        <td colspan="2" class="formula-cell positive" id="success_story">RBL conversion rate doubled - document process</td>
+                        <td colspan="3" class="formula-cell">Replicate across all products</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="export-section">
+            <button class="export-btn" onclick="exportToCSV()">📊 Export to CSV</button>
+            <button class="export-btn" onclick="copyToClipboard()" style="background: #3498db;">📋 Copy for Excel</button>
+            <button class="export-btn" onclick="printTable()" style="background: #9b59b6;">🖨️ Print Report</button>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const julyAllEligible = parseInt(document.getElementById('july_all_eligible').value) || 0;
+            const julyHDFCLeads = parseInt(document.getElementById('july_hdfc_leads').value) || 0;
+            const julyRBLLeads = parseInt(document.getElementById('july_rbl_leads').value) || 0;
+            const julyRBLFailed = parseInt(document.getElementById('july_rbl_failed').value) || 0;
+            const julyRBLArchived = parseInt(document.getElementById('july_rbl_archived').value) || 0;
+            const julyHDFCConv = parseInt(document.getElementById('july_hdfc_conv').value) || 0;
+            const julyRBLConv = parseInt(document.getElementById('july_rbl_conv').value) || 0;
+            const julyTotalFresh = parseInt(document.getElementById('july_total_fresh').value) || 0;
+            
+            const augAllEligible = parseInt(document.getElementById('aug_all_eligible').value) || 0;
+            const augHDFCLeads = parseInt(document.getElementById('aug_hdfc_leads').value) || 0;
+            const augRBLLeads = parseInt(document.getElementById('aug_rbl_leads').value) || 0;
+            const augRBLFailed = parseInt(document.getElementById('aug_rbl_failed').value) || 0;
+            const augRBLArchived = parseInt(document.getElementById('aug_rbl_archived').value) || 0;
+            const augHDFCConv = parseInt(document.getElementById('aug_hdfc_conv').value) || 0;
+            const augRBLConv = parseInt(document.getElementById('aug_rbl_conv').value) || 0;
+            const augTotalFresh = parseInt(document.getElementById('aug_total_fresh').value) || 0;
+            
+            // Calculate totals
+            const julyTotal = julyAllEligible + julyHDFCLeads + julyRBLLeads + julyRBLFailed + julyRBLArchived;
+            const augTotal = augAllEligible + augHDFCLeads + augRBLLeads + augRBLFailed + augRBLArchived;
+            
+            // Calculate changes
+            const allEligibleChange = augAllEligible - julyAllEligible;
+            const allEligibleChangePct = julyAllEligible > 0 ? ((allEligibleChange / julyAllEligible) * 100).toFixed(1) : 0;
+            
+            const hdfcLeadsChange = augHDFCLeads - julyHDFCLeads;
+            const hdfcLeadsChangePct = julyHDFCLeads > 0 ? ((hdfcLeadsChange / julyHDFCLeads) * 100).toFixed(1) : 0;
+            
+            const rblLeadsChange = augRBLLeads - julyRBLLeads;
+            const rblLeadsChangePct = julyRBLLeads > 0 ? ((rblLeadsChange / julyRBLLeads) * 100).toFixed(1) : 0;
+            
+            const rblFailedChange = augRBLFailed - julyRBLFailed;
+            const rblFailedChangePct = julyRBLFailed > 0 ? ((rblFailedChange / julyRBLFailed) * 100).toFixed(1) : 'New';
+            
+            const rblArchivedChange = augRBLArchived - julyRBLArchived;
+            
+            const hdfcConvChange = augHDFCConv - julyHDFCConv;
+            const hdfcConvChangePct = julyHDFCConv > 0 ? ((hdfcConvChange / julyHDFCConv) * 100).toFixed(1) : 0;
+            
+            const rblConvChange = augRBLConv - julyRBLConv;
+            const rblConvChangePct = julyRBLConv > 0 ? ((rblConvChange / julyRBLConv) * 100).toFixed(1) : 0;
+            
+            const totalFreshChange = augTotalFresh - julyTotalFresh;
+            const totalFreshChangePct = julyTotalFresh > 0 ? ((totalFreshChange / julyTotalFresh) * 100).toFixed(1) : 0;
+            
+            // Calculate conversion rates
+            const julyHDFCRate = julyHDFCLeads > 0 ? ((julyHDFCConv / julyHDFCLeads) * 100).toFixed(1) : 0;
+            const augHDFCRate = augHDFCLeads > 0 ? ((augHDFCConv / augHDFCLeads) * 100).toFixed(1) : 0;
+            const julyRBLRate = julyRBLLeads > 0 ? ((julyRBLConv / julyRBLLeads) * 100).toFixed(1) : 0;
+            const augRBLRate = augRBLLeads > 0 ? ((augRBLConv / augRBLLeads) * 100).toFixed(1) : 0;
+            
+            const julyOverallRate = julyTotal > 0 ? ((julyTotalFresh / julyTotal) * 100).toFixed(1) : 0;
+            const augOverallRate = augTotal > 0 ? ((augTotalFresh / augTotal) * 100).toFixed(1) : 0;
+            
+            const hdfcRateChange = (parseFloat(augHDFCRate) - parseFloat(julyHDFCRate)).toFixed(1);
+            const rblRateChange = (parseFloat(augRBLRate) - parseFloat(julyRBLRate)).toFixed(1);
+            const overallRateChange = (parseFloat(augOverallRate) - parseFloat(julyOverallRate)).toFixed(1);
+            
+            const hdfcRateChangePct = parseFloat(julyHDFCRate) > 0 ? (((parseFloat(augHDFCRate) - parseFloat(julyHDFCRate)) / parseFloat(julyHDFCRate)) * 100).toFixed(1) : 0;
+            const rblRateChangePct = parseFloat(julyRBLRate) > 0 ? (((parseFloat(augRBLRate) - parseFloat(julyRBLRate)) / parseFloat(julyRBLRate)) * 100).toFixed(1) : 0;
+            const overallRateChangePct = parseFloat(julyOverallRate) > 0 ? (((parseFloat(augOverallRate) - parseFloat(julyOverallRate)) / parseFloat(julyOverallRate)) * 100).toFixed(1) : 0;
+            
+            // Calculate lead mix
+            const julyHDFCMix = julyTotal > 0 ? ((julyHDFCLeads / julyTotal) * 100).toFixed(1) : 0;
+            const augHDFCMix = augTotal > 0 ? ((augHDFCLeads / augTotal) * 100).toFixed(1) : 0;
+            const julyRBLMix = julyTotal > 0 ? ((julyRBLLeads / julyTotal) * 100).toFixed(1) : 0;
+            const augRBLMix = augTotal > 0 ? ((augRBLLeads / augTotal) * 100).toFixed(1) : 0;
+            const julyAllEligibleMix = julyTotal > 0 ? ((julyAllEligible / julyTotal) * 100).toFixed(1) : 0;
+            const augAllEligibleMix = augTotal > 0 ? ((augAllEligible / augTotal) * 100).toFixed(1) : 0;
+            
+            const hdfcMixChange = (parseFloat(augHDFCMix) - parseFloat(julyHDFCMix)).toFixed(1);
+            const rblMixChange = (parseFloat(augRBLMix) - parseFloat(julyRBLMix)).toFixed(1);
+            const allEligibleMixChange = (parseFloat(augAllEligibleMix) - parseFloat(julyAllEligibleMix)).toFixed(1);
+            
+            // Calculate revenue impacts
+            const lostHDFCRevenue = Math.round(hdfcLeadsChange * (parseFloat(augHDFCRate) / 100));
+            const rblEfficiencyGain = Math.round(augRBLLeads * (parseFloat(rblRateChange) / 100));
+            const netImpact = augTotalFresh - julyTotalFresh;
+            const netImpactPct = julyTotalFresh > 0 ? ((netImpact / julyTotalFresh) * 100).toFixed(1) : 0;
+            
+            // Calculate potentials
+            const hdfcPotential = Math.round(julyHDFCLeads * (parseFloat(augHDFCRate) / 100));
+            const rblPotential = Math.round(julyRBLLeads * (parseFloat(augRBLRate) / 100));
+            const septemberPotential = hdfcPotential + rblPotential;
+            const septemberVsAugust = septemberPotential - augTotalFresh;
+            const septemberGrowthPct = augTotalFresh > 0 ? ((septemberVsAugust / augTotalFresh) * 100).toFixed(1) : 0;
+            
+            // Update display with proper formatting
+            document.getElementById('all_eligible_change').textContent = formatChange(allEligibleChange);
+            document.getElementById('all_eligible_change_pct').textContent = formatPercent(allEligibleChangePct);
+            
+            document.getElementById('hdfc_leads_change').textContent = formatChange(hdfcLeadsChange);
+            document.getElementById('hdfc_leads_change_pct').textContent = formatPercent(hdfcLeadsChangePct);
+            
+            document.getElementById('rbl_leads_change').textContent = formatChange(rblLeadsChange);
+            document.getElementById('rbl_leads_change_pct').textContent = formatPercent(rblLeadsChangePct);
+            
+            document.getElementById('rbl_failed_change').textContent = formatChange(rblFailedChange);
+            document.getElementById('rbl_failed_change_pct').textContent = rblFailedChangePct === 'New' ? 'New' : formatPercent(rblFailedChangePct);
+            
+            document.getElementById('rbl_archived_change').textContent = formatChange(rblArchivedChange);
+            
+            document.getElementById('hdfc_conv_change').textContent = formatChange(hdfcConvChange);
+            document.getElementById('hdfc_conv_change_pct').textContent = formatPercent(hdfcConvChangePct);
+            
+            document.getElementById('rbl_conv_change').textContent = formatChange(rblConvChange);
+            document.getElementById('rbl_conv_change_pct').textContent = formatPercent(rblConvChangePct);
+            
+            document.getElementById('total_fresh_change').textContent = formatChange(totalFreshChange);
+            document.getElementById('total_fresh_change_pct').textContent = formatPercent(totalFreshChangePct);
+            
+            // Update calculated metrics
+            document.getElementById('july_total_leads').textContent = julyTotal.toLocaleString();
+            document.getElementById('aug_total_leads').textContent = augTotal.toLocaleString();
+            document.getElementById('total_leads_change').textContent = formatChange(augTotal - julyTotal);
+            document.getElementById('total_leads_change_pct').textContent = formatPercent(julyTotal > 0 ? (((augTotal - julyTotal) / julyTotal) * 100).toFixed(1) : 0);
+            
+            document.getElementById('july_hdfc_rate').textContent = `${julyHDFCRate}%`;
+            document.getElementById('aug_hdfc_rate').textContent = `${augHDFCRate}%`;
+            document.getElementById('hdfc_rate_change').textContent = `${hdfcRateChange >= 0 ? '+' : ''}${hdfcRateChange}pp`;
+            document.getElementById('hdfc_rate_change_pct').textContent = formatPercent(hdfcRateChangePct);
+            
+            document.getElementById('july_rbl_rate').textContent = `${julyRBLRate}%`;
+            document.getElementById('aug_rbl_rate').textContent = `${augRBLRate}%`;
+            document.getElementById('rbl_rate_change').textContent = `${rblRateChange >= 0 ? '+' : ''}${rblRateChange}pp`;
+            document.getElementById('rbl_rate_change_pct').textContent = formatPercent(rblRateChangePct);
+            
+            document.getElementById('july_overall_rate').textContent = `${julyOverallRate}%`;
+            document.getElementById('aug_overall_rate').textContent = `${augOverallRate}%`;
+            document.getElementById('overall_rate_change').textContent = `${overallRateChange >= 0 ? '+' : ''}${overallRateChange}pp`;
+            document.getElementById('overall_rate_change_pct').textContent = formatPercent(overallRateChangePct);
+            
+            // Update impact analysis
+            document.getElementById('lost_hdfc_revenue').textContent = `${lostHDFCRevenue} KYCs`;
+            document.getElementById('rbl_efficiency_gain').textContent = `${rblEfficiencyGain >= 0 ? '+' : ''}${rblEfficiencyGain} KYCs`;
+            document.getElementById('net_impact').textContent = `${netImpact >= 0 ? '+' : ''}${netImpact} KYCs`;
+            document.getElementById('net_impact_pct').textContent = formatPercent(netImpactPct);
+            
+            // Update potential analysis
+            document.getElementById('hdfc_potential').textContent = `${hdfcPotential} KYCs`;
+            document.getElementById('hdfc_potential_vs_actual').textContent = `${hdfcPotential - augHDFCConv >= 0 ? '+' : ''}${hdfcPotential - augHDFCConv} vs actual`;
+            document.getElementById('rbl_potential').textContent = `${rblPotential} KYCs`;
+            document.getElementById('rbl_potential_vs_actual').textContent = `${rblPotential - augRBLConv >= 0 ? '+' : ''}${rblPotential - augRBLConv} vs actual`;
+            document.getElementById('september_potential').textContent = `${septemberPotential} KYCs`;
+            document.getElementById('september_vs_august').textContent = `${septemberVsAugust >= 0 ? '+' : ''}${septemberVsAugust} vs August`;
+            document.getElementById('september_growth_pct').textContent = formatPercent(septemberGrowthPct);
+            
+            // Update lead mix
+            document.getElementById('july_hdfc_mix').textContent = `${julyHDFCMix}%`;
+            document.getElementById('aug_hdfc_mix').textContent = `${augHDFCMix}%`;
+            document.getElementById('hdfc_mix_change').textContent = `${hdfcMixChange >= 0 ? '+' : ''}${hdfcMixChange}pp`;
+            
+            document.getElementById('july_rbl_mix').textContent = `${julyRBLMix}%`;
+            document.getElementById('aug_rbl_mix').textContent = `${augRBLMix}%`;
+            document.getElementById('rbl_mix_change').textContent = `${rblMixChange >= 0 ? '+' : ''}${rblMixChange}pp`;
+            
+            document.getElementById('july_all_eligible_mix').textContent = `${julyAllEligibleMix}%`;
+            document.getElementById('aug_all_eligible_mix').textContent = `${augAllEligibleMix}%`;
+            document.getElementById('all_eligible_mix_change').textContent = `${allEligibleMixChange >= 0 ? '+' : ''}${allEligibleMixChange}pp`;
+            
+            // Update color coding
+            updateColorCoding();
+        }
+        
+        function formatChange(value) {
+            return `${value >= 0 ? '+' : ''}${value.toLocaleString()}`;
+        }
+        
+        function formatPercent(value) {
+            return `${value >= 0 ? '+' : ''}${value}%`;
+        }
+        
+        function updateColorCoding() {
+            // Color code changes
+            const changeElements = [
+                'all_eligible_change_pct', 'hdfc_leads_change_pct', 'rbl_leads_change_pct',
+                'hdfc_conv_change_pct', 'rbl_conv_change_pct', 'total_fresh_change_pct',
+                'hdfc_rate_change', 'rbl_rate_change', 'overall_rate_change',
+                'net_impact_pct', 'september_growth_pct'
+            ];
+            
+            changeElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const text = element.textContent;
+                    if (text.includes('+')) {
+                        element.className = 'formula-cell positive';
+                    } else if (text.includes('-')) {
+                        element.className = 'formula-cell negative';
+                    } else {
+                        element.className = 'formula-cell';
+                    }
+                }
+            });
+        }
+        
+        function exportToCSV() {
+            const table = document.getElementById('mainTable');
+            let csv = [];
+            
+            for (let i = 0; i < table.rows.length; i++) {
+                let row = [];
+                for (let j = 0; j < table.rows[i].cells.length; j++) {
+                    let cellText = table.rows[i].cells[j].textContent.trim();
+                    if (table.rows[i].cells[j].querySelector('input')) {
+                        cellText = table.rows[i].cells[j].querySelector('input').value;
+                    }
+                    row.push('"' + cellText.replace(/"/g, '""') + '"');
+                }
+                csv.push(row.join(','));
+            }
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sales_performance_analysis.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function copyToClipboard() {
+            const table = document.getElementById('mainTable');
+            let text = '';
+            
+            for (let i = 0; i < table.rows.length; i++) {
+                let row = [];
+                for (let j = 0; j < table.rows[i].cells.length; j++) {
+                    let cellText = table.rows[i].cells[j].textContent.trim();
+                    if (table.rows[i].cells[j].querySelector('input')) {
+                        cellText = table.rows[i].cells[j].querySelector('input').value;
+                    }
+                    row.push(cellText);
+                }
+                text += row.join('\t') + '\n';
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Table copied! You can now paste it directly into Excel.');
+            });
+        }
+        
+        function printTable() {
+            window.print();
+        }
+        
+        // Initialize calculations on page load
+        window.onload = function() {
+            calculate();
+        };
+    </script>
+</body>
+</html>
